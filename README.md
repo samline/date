@@ -1,10 +1,10 @@
 # @samline/date
 
-Small date formatting package built on top of Day.js with a shared core API, framework wrappers, and browser usage.
+Small date formatting package built on top of Day.js with strict parsing, locale-aware formatting, and a shared API for core, vanilla, React, Vue, Svelte, and browser usage.
 
-This package uses Day.js as its date engine. We are grateful for the existence of the package and will make good use of it in this project.
+This package uses Day.js as its date engine. Thanks to the Day.js project for making that foundation available.
 
-Repository: https://github.com/iamkun/dayjs
+Day.js repository: https://github.com/iamkun/dayjs
 
 ## Features
 
@@ -16,24 +16,85 @@ Repository: https://github.com/iamkun/dayjs
 - parse and validate dates with explicit result objects
 - use the same API from core, vanilla, React, Vue, Svelte, or browser global builds
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Browser and CDN](#browser-and-cdn)
+- [Entrypoints](#entrypoints)
+- [Quick Start](#quick-start)
+- [API](#api)
+- [Supported Locales](#supported-locales)
+- [Documentation](#documentation)
+- [License](#license)
+
 ## Installation
+
+Use the package manager that matches your project. The published package targets Node 20 or newer.
 
 ```bash
 npm install @samline/date
 ```
 
+```bash
+pnpm add @samline/date
+```
+
+```bash
+yarn add @samline/date
+```
+
+```bash
+bun add @samline/date
+```
+
+## Browser and CDN
+
+If your project does not use a bundler, load the browser build from a CDN. Prefer pinning a version instead of using `latest` in production.
+
+```html
+<script type="module">
+  import { DateKit } from 'https://cdn.jsdelivr.net/npm/@samline/date@2.1.1/dist/browser/global.js'
+
+  const value = await DateKit.getDate({
+    date: '23/03/2026',
+    input: 'DD/MM/YYYY',
+    output: 'MMMM D, YYYY'
+  })
+
+  console.log(value)
+  console.log(window.DateKit.resolveLocale('en-us'))
+</script>
+```
+
+You can also use unpkg:
+
+```html
+<script type="module">
+  import { DateKit } from 'https://unpkg.com/@samline/date@2.1.1/dist/browser/global.js'
+
+  console.log(await DateKit.isValidDate({
+    date: '23/03/2026',
+    input: 'DD/MM/YYYY'
+  }))
+</script>
+```
+
+The browser bundle exposes `window.DateKit` and the same shared helpers documented below.
+
 ## Entrypoints
 
-| Entrypoint | Purpose |
-| --- | --- |
-| `@samline/date` | shared core API |
-| `@samline/date/vanilla` | utility wrapper for plain TypeScript or JavaScript |
-| `@samline/date/react` | React hook |
-| `@samline/date/vue` | Vue composable |
-| `@samline/date/svelte` | Svelte store helpers |
-| `@samline/date/browser` | browser global build |
+| Entrypoint | Main API | Purpose |
+| --- | --- | --- |
+| `@samline/date` | `createDateFormatter`, `getDate`, `parseDate`, `isValidDate` | shared core API |
+| `@samline/date/vanilla` | same exports as root | utility wrapper for plain TypeScript or JavaScript |
+| `@samline/date/react` | `useDateFormatter` | React hook with scoped formatter state |
+| `@samline/date/vue` | `useDateFormatter` | Vue composable with reactive locale state |
+| `@samline/date/svelte` | `createDateFormatterStore` | Svelte store-driven formatter API |
+| `@samline/date/browser` | `DateKit` | browser global build for projects without a bundler |
 
 ## Quick Start
+
+Use the one-shot helpers when you only need a single async operation.
 
 ```ts
 import { getDate } from '@samline/date'
@@ -45,22 +106,7 @@ const date = await getDate({
 })
 ```
 
-You can also inspect the effective locale before formatting:
-
-```ts
-import { resolveLocale } from '@samline/date'
-
-resolveLocale('es-mx')
-// es-mx
-
-resolveLocale('en-us')
-// en
-
-resolveLocale('zz-zz')
-// null
-```
-
-For repeated work with the same locale or invalid text, create one formatter instance and reuse it:
+If you need repeated formatting, parsing, or locale changes, create one formatter instance and reuse it.
 
 ```ts
 import { createDateFormatter } from '@samline/date'
@@ -76,7 +122,36 @@ const date = formatter.getDate({
 })
 ```
 
+You can also inspect the effective locale before formatting:
+
+```ts
+import { getSupportedLocales, resolveLocale } from '@samline/date'
+
+getSupportedLocales()
+// ['en', 'es', 'es-mx', 'fr', 'pt', 'pt-br', 'de', 'it', 'ja']
+
+resolveLocale('es-mx')
+// es-mx
+
+resolveLocale('en-us')
+// en
+
+resolveLocale('zz-zz')
+// null
+```
+
 ## API
+
+The shared root entrypoint exports:
+
+- `createDateFormatter(config?)`
+- `getDate(props?, config?)`
+- `parseDate(props, config?)`
+- `isValidDate(props, config?)`
+- `getSupportedLocales()`
+- `SUPPORTED_LOCALES`
+- `resolveLocale(locale)`
+- `isSupportedLocale(locale)`
 
 ### createDateFormatter
 
@@ -117,15 +192,19 @@ The formatter instance exposes:
 ### Locale helpers
 
 ```ts
+SUPPORTED_LOCALES: readonly SupportedLocale[]
+getSupportedLocales(): readonly SupportedLocale[]
 resolveLocale(locale: LocaleInput): SupportedLocale | null
 isSupportedLocale(locale: string): boolean
 ```
+
+Use `SUPPORTED_LOCALES` or `getSupportedLocales()` when you need the list of locale keys exposed by the package.
 
 Use `resolveLocale` when you want to know the effective locale before creating a formatter or calling a helper.
 
 Use `isSupportedLocale` when you only need a boolean check after the package applies its exact-match and base-locale fallback rules.
 
-These helpers are also available in the browser build through `DateKit.resolveLocale(...)` and `DateKit.isSupportedLocale(...)`.
+These helpers are also available in the browser build through `DateKit.getSupportedLocales()`, `DateKit.resolveLocale(...)`, and `DateKit.isSupportedLocale(...)`.
 
 ### One-shot helpers
 
@@ -136,6 +215,8 @@ isValidDate(props: DateParsingOptions, config?: DateFormatterConfig): Promise<bo
 ```
 
 Use these helpers when you only need a single operation and do not want to create a formatter instance manually.
+
+All three helpers are async because they can load locale data before running the operation.
 
 | Helper | Returns | Use it when you need |
 | --- | --- | --- |
@@ -165,6 +246,8 @@ const valid = await isValidDate({
 
 They load the requested locale automatically and also use `strict: true` by default.
 
+If you call `getDate()` without props, it returns the current date formatted with the default formatter settings.
+
 ### parseDate
 
 ```ts
@@ -180,6 +263,8 @@ Returns a structured result.
 - Valid parse: `isValid`, `date`, `iso`, `timestamp`, `format(output?)`
 - Invalid parse: `isValid: false`, `error`, and null date fields
 
+This makes `parseDate` the right choice when you need validation details, an ISO value, a timestamp, or deferred formatting from the same parsed input.
+
 ### isValidDate
 
 ```ts
@@ -194,7 +279,7 @@ Returns a boolean when you only need validation without formatting.
 
 ## Supported Locales
 
-The package ships helper support for these locale keys:
+The package ships helper support for these locale keys through `SUPPORTED_LOCALES` and `getSupportedLocales()`:
 
 - `en`
 - `es`
@@ -226,11 +311,11 @@ Use a simple locale like `fr` or `en` when the base language is enough. Use a re
 
 ## Documentation
 
-- [docs/vanilla.md](docs/vanilla.md)
-- [docs/browser.md](docs/browser.md)
-- [docs/react.md](docs/react.md)
-- [docs/vue.md](docs/vue.md)
-- [docs/svelte.md](docs/svelte.md)
+- [docs/vanilla.md](docs/vanilla.md) for the shared API in plain TypeScript or JavaScript
+- [docs/browser.md](docs/browser.md) for browser-only usage without a bundler
+- [docs/react.md](docs/react.md) for the React hook entrypoint
+- [docs/vue.md](docs/vue.md) for the Vue composable entrypoint
+- [docs/svelte.md](docs/svelte.md) for the Svelte store entrypoint
 
 ## License
 

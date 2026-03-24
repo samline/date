@@ -1,6 +1,6 @@
 {
   "name": "@samline/date",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Format and localize dates with Day.js through a small multi-entrypoint API.",
   "type": "module",
   "license": "MIT",
