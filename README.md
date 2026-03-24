@@ -11,6 +11,9 @@ Repository: https://github.com/iamkun/dayjs
 - format dates with configurable input and output patterns
 - default locale is English
 - load and switch supported locales on demand
+- create formatter instances with isolated locale state
+- enable strict parsing globally per formatter or per call
+- parse and validate dates with explicit result objects
 - use the same API from core, vanilla, React, Vue, Svelte, or browser global builds
 
 ## Installation
@@ -33,11 +36,13 @@ npm install @samline/date
 ## Quick Start
 
 ```ts
-import { getDate, setDayjs } from '@samline/date'
+import { createDateFormatter } from '@samline/date'
 
-await setDayjs('es-mx')
+const formatter = createDateFormatter({ locale: 'es-mx', strict: true })
 
-const date = getDate({
+await formatter.ready
+
+const date = formatter.getDate({
   date: '23/03/2026',
   input: 'DD/MM/YYYY',
   output: 'MMMM D, YYYY'
@@ -46,27 +51,66 @@ const date = getDate({
 
 ## API
 
-### getDate
+### createDateFormatter
 
 ```ts
-getDate(props?: {
-  date?: string
-  input?: string
-  output?: string
-}): string
+createDateFormatter(config?: {
+  locale?: SupportedLocale
+  strict?: boolean
+  invalid?: string
+}): {
+  getDate(props?: GetDateOptions): string
+  parseDate(props: DateParsingOptions): ParseDateResult
+  isValidDate(props: DateParsingOptions): boolean
+  getSupportedLocales(): readonly SupportedLocale[]
+  getCurrentLocale(): SupportedLocale
+  setLocale(locale: SupportedLocale): Promise<void>
+  ready: Promise<void>
+}
 ```
 
-Returns the current date in `YYYY-MM-DD` when no props are provided.
+Creates a formatter instance with its own locale state. This avoids coupling framework wrappers and utility calls to the global Day.js locale.
 
-Returns `Invalid Date` when the input cannot be parsed.
+Use `strict: true` to make parsing fail when the input does not match the provided format exactly.
 
-### setDayjs
+If you override `locale` per call, make sure that locale was already loaded by a formatter instance.
+
+The formatter instance exposes:
+
+- `getDate(props?)`
+- `parseDate(props)`
+- `isValidDate(props)`
+- `getCurrentLocale()`
+- `setLocale(locale)`
+- `getSupportedLocales()`
+- `ready`
+
+### parseDate
 
 ```ts
-setDayjs(locale: string): Promise<void>
+formatter.parseDate({
+  date: '23/03/2026',
+  input: 'DD/MM/YYYY',
+  strict: true
+})
 ```
 
-Loads a supported locale if needed and sets it as the active locale.
+Returns a structured result.
+
+- Valid parse: `isValid`, `date`, `iso`, `timestamp`, `format(output?)`
+- Invalid parse: `isValid: false`, `error`, and null date fields
+
+### isValidDate
+
+```ts
+formatter.isValidDate({
+  date: '1970-00-00',
+  input: 'YYYY-MM-DD',
+  strict: true
+})
+```
+
+Returns a boolean when you only need validation without formatting.
 
 ## Supported Locales
 
@@ -82,7 +126,7 @@ The package ships helper support for these locale keys:
 - `it`
 - `ja`
 
-Use `await setDayjs('es-mx')` before calling `getDate` when you need a locale other than English.
+Use `createDateFormatter({ locale: 'es-mx' })` when you need a locale other than English.
 
 ## Documentation
 

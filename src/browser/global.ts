@@ -1,17 +1,16 @@
-import { getDate, getSupportedLocales, setDayjs } from '../index.js'
+import { createDateFormatter, getSupportedLocales } from '../index.js'
 
-export const SamlineDate = {
-  getDate,
-  getSupportedLocales,
-  setDayjs
+export const DateKit = {
+  createDateFormatter,
+  getSupportedLocales
 }
 
 declare global {
   interface Window {
-    SamlineDate: typeof SamlineDate
+    DateKit: typeof DateKit
   }
 }
 
 if (typeof window !== 'undefined') {
-  window.SamlineDate = SamlineDate
+  window.DateKit = DateKit
 }

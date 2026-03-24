@@ -1,24 +1,33 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import { getCurrentLocale, getDate, getSupportedLocales, setDayjs, type GetDateOptions, type SupportedLocale } from '../index.js'
+import {
+  createDateFormatter,
+  getSupportedLocales,
+  type DateFormatterConfig,
+  type DateParsingOptions,
+  type GetDateOptions,
+  type SupportedLocale
+} from '../index.js'
 
-export type UseDateFormatterOptions = {
-  locale?: SupportedLocale
-}
+export type UseDateFormatterOptions = DateFormatterConfig
 
 export const useDateFormatter = (options?: UseDateFormatterOptions) => {
-  const locale = ref<SupportedLocale>(options?.locale ?? 'en')
+  const formatter = createDateFormatter(options)
+  const locale = ref<SupportedLocale>(formatter.getCurrentLocale())
 
   const setLocale = async (nextLocale: SupportedLocale) => {
-    await setDayjs(nextLocale)
+    await formatter.setLocale(nextLocale)
     locale.value = nextLocale
   }
 
   return {
     locale,
-    currentLocale: getCurrentLocale,
-    getDate: (props?: GetDateOptions) => getDate(props),
+    currentLocale: computed(() => locale.value),
+    getDate: (props?: GetDateOptions) => formatter.getDate(props),
+    parseDate: (props: DateParsingOptions) => formatter.parseDate(props),
+    isValidDate: (props: DateParsingOptions) => formatter.isValidDate(props),
     getSupportedLocales,
+    ready: formatter.ready,
     setLocale
   }
 }

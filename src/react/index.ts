@@ -1,25 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 
-import { getCurrentLocale, getDate, getSupportedLocales, setDayjs, type GetDateOptions, type SupportedLocale } from '../index.js'
+import {
+  createDateFormatter,
+  getSupportedLocales,
+  type DateFormatterConfig,
+  type DateParsingOptions,
+  type GetDateOptions,
+  type SupportedLocale
+} from '../index.js'
 
-export type UseDateFormatterOptions = {
-  locale?: SupportedLocale
-}
+export type UseDateFormatterOptions = DateFormatterConfig
 
 export const useDateFormatter = (options?: UseDateFormatterOptions) => {
-  const [locale, setLocaleState] = useState<SupportedLocale>(options?.locale ?? 'en')
-
-  useEffect(() => {
-    void setDayjs(locale)
-  }, [locale])
+  const formatterRef = useRef(createDateFormatter(options))
+  const [locale, setLocaleState] = useState<SupportedLocale>(formatterRef.current.getCurrentLocale())
 
   return {
     locale,
-    currentLocale: getCurrentLocale(),
-    getDate: (props?: GetDateOptions) => getDate(props),
+    currentLocale: locale,
+    getDate: (props?: GetDateOptions) => formatterRef.current.getDate(props),
+    parseDate: (props: DateParsingOptions) => formatterRef.current.parseDate(props),
+    isValidDate: (props: DateParsingOptions) => formatterRef.current.isValidDate(props),
     getSupportedLocales,
+    ready: formatterRef.current.ready,
     setLocale: async (nextLocale: SupportedLocale) => {
-      await setDayjs(nextLocale)
+      await formatterRef.current.setLocale(nextLocale)
       setLocaleState(nextLocale)
     }
   }
