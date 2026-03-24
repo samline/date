@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import {
   createDateFormatter,
   getSupportedLocales,
+  type CreateDateChainOptions,
+  type DateChain,
   type DateFormatterConfig,
   type DateParsingOptions,
   type GetDateOptions,
@@ -24,6 +26,7 @@ export const useDateFormatter = (options?: UseDateFormatterOptions) => {
   return {
     locale,
     currentLocale: computed(() => locale.value),
+    createDateChain: (props?: CreateDateChainOptions): DateChain => formatter.createDateChain(props),
     getDate: (props?: GetDateOptions) => formatter.getDate(props),
     parseDate: (props: DateParsingOptions) => formatter.parseDate(props),
     isValidDate: (props: DateParsingOptions) => formatter.isValidDate(props),

@@ -11,6 +11,7 @@ Day.js repository: https://github.com/iamkun/dayjs
 - format dates with configurable input and output patterns
 - default locale is English
 - load and switch supported locales on demand
+- manipulate and compare dates through a chainable helper
 - create formatter instances with isolated locale state
 - enable strict parsing globally per formatter or per call
 - parse and validate dates with explicit result objects
@@ -54,7 +55,7 @@ Use the browser bundle when your project loads scripts directly in the page and 
 This is useful in environments such as Shopify themes, WordPress templates, or plain HTML pages with no build step.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@samline/date@2.1.2/dist/browser/date.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@samline/date@2.2.0/dist/browser/date.global.js"></script>
 ```
 
 Then use it from a normal script:
@@ -82,11 +83,11 @@ Use one of the package manager commands above when your project has a build step
 
 | Entrypoint | Main API | Purpose |
 | --- | --- | --- |
-| `@samline/date` | `createDateFormatter`, `getDate`, `parseDate`, `isValidDate` | shared core API |
+| `@samline/date` | `createDateChain`, `createDateFormatter`, `getDate`, `parseDate`, `isValidDate` | shared core API |
 | `@samline/date/vanilla` | same exports as root | utility wrapper for plain TypeScript or JavaScript |
-| `@samline/date/react` | `useDateFormatter` | React hook with scoped formatter state |
-| `@samline/date/vue` | `useDateFormatter` | Vue composable with reactive locale state |
-| `@samline/date/svelte` | `createDateFormatterStore` | Svelte store-driven formatter API |
+| `@samline/date/react` | `useDateFormatter` | React hook with scoped formatter and chain state |
+| `@samline/date/vue` | `useDateFormatter` | Vue composable with reactive formatter and chain state |
+| `@samline/date/svelte` | `createDateFormatterStore` | Svelte store-driven formatter and chain API |
 | `@samline/date/browser` | `DateKit` | browser global build for projects without a bundler |
 
 ## Quick Start
@@ -141,6 +142,7 @@ resolveLocale('zz-zz')
 
 The shared root entrypoint exports:
 
+- `createDateChain(props?, config?)`
 - `createDateFormatter(config?)`
 - `getDate(props?, config?)`
 - `parseDate(props, config?)`
@@ -158,6 +160,7 @@ createDateFormatter(config?: {
   strict?: boolean
   invalid?: string
 }): {
+  createDateChain(props?: CreateDateChainOptions): DateChain
   getDate(props?: GetDateOptions): string
   parseDate(props: DateParsingOptions): ParseDateResult
   isValidDate(props: DateParsingOptions): boolean
@@ -178,6 +181,7 @@ Regional locale input falls back to the base locale when the exact variant is no
 
 The formatter instance exposes:
 
+- `createDateChain(props?)`
 - `getDate(props?)`
 - `parseDate(props)`
 - `isValidDate(props)`
@@ -206,6 +210,7 @@ These helpers are also available in the browser build through `DateKit.getSuppor
 ### One-shot helpers
 
 ```ts
+createDateChain(props?: CreateDateChainOptions, config?: DateFormatterConfig): DateChain
 getDate(props?: GetDateOptions, config?: DateFormatterConfig): Promise<string>
 parseDate(props: DateParsingOptions, config?: DateFormatterConfig): Promise<ParseDateResult>
 isValidDate(props: DateParsingOptions, config?: DateFormatterConfig): Promise<boolean>
@@ -217,12 +222,25 @@ All three helpers are async because they can load locale data before running the
 
 | Helper | Returns | Use it when you need |
 | --- | --- | --- |
+| `createDateChain(...)` | chainable date helper | a one-shot manipulation or comparison flow with multiple date operations |
 | `getDate(...)` | formatted string | a final display value |
 | `parseDate(...)` | structured parse result | validation details, `Date`, `iso`, `timestamp`, or deferred formatting |
 | `isValidDate(...)` | boolean | only a yes or no validation check |
 
 ```ts
-import { getDate, isValidDate, parseDate } from '@samline/date'
+import { createDateChain, getDate, isValidDate, parseDate } from '@samline/date'
+
+const chain = createDateChain({
+  date: '23/03/2026',
+  input: 'DD/MM/YYYY'
+})
+
+await chain.ready
+
+const moved = chain
+  .add(3, 'month')
+  .set('day', 1)
+  .format('YYYY-MM-DD')
 
 const value = await getDate({
   date: '23/03/2026',
@@ -241,9 +259,75 @@ const valid = await isValidDate({
 })
 ```
 
-They load the requested locale automatically and also use `strict: true` by default.
+`getDate`, `parseDate`, and `isValidDate` are async because they can load locale data before running the operation.
+
+`createDateChain` is also a valid one-shot helper. It returns immediately, but you must `await chain.ready` before using it when the locale may need to load.
+
+All of these helpers use `strict: true` by default.
 
 If you call `getDate()` without props, it returns the current date formatted with the default formatter settings.
+
+### createDateChain
+
+```ts
+const chain = createDateChain({
+  date: '23/03/2026',
+  input: 'DD/MM/YYYY',
+  locale: 'es',
+  strict: true,
+  invalid: 'Fecha invalida'
+})
+
+await chain.ready
+
+chain
+  .add(3, 'month')
+  .set('day', 1)
+  .format('YYYY-MM-DD')
+```
+
+Use this helper when you want to parse a date and then manipulate or compare it in the same flow.
+
+The chainable helper exposes:
+
+- `add(value, unit)`
+- `subtract(value, unit)`
+- `set(unit, value)`
+- `startOf(unit)`
+- `endOf(unit)`
+- `format(output?)`
+- `toDate()`
+- `toISOString()`
+- `toTimestamp()`
+- `isValid()`
+- `isBefore(other, unit?)`
+- `isAfter(other, unit?)`
+- `isSame(other, unit?)`
+- `toState()`
+- `ready`
+
+`set('day', value)` is the public way to change the day of the month. Internally it maps to Day.js `set('date', value)` so the behavior stays aligned with Day.js while the public API stays clearer.
+
+`toState()` returns the current structured state of the chain:
+
+- valid state: `isValid`, `locale`, `date`, `iso`, `timestamp`
+- invalid state: `isValid`, `locale`, `date: null`, `iso: null`, `timestamp: null`, `error`
+
+Example:
+
+```ts
+const chain = createDateChain({
+  date: '23/03/2026',
+  input: 'DD/MM/YYYY'
+})
+
+await chain.ready
+
+const finalState = chain
+  .add(3, 'month')
+  .endOf('month')
+  .toState()
+```
 
 ### parseDate
 

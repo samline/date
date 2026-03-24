@@ -64,6 +64,10 @@ export const markLocaleAsLoaded = (locale: SupportedLocale): void => {
   loadedLocales.add(locale)
 }
 
+export const isLocaleLoaded = (locale: SupportedLocale): boolean => {
+  return loadedLocales.has(locale)
+}
+
 export const ensureLocaleLoaded = async (locale: SupportedLocale): Promise<void> => {
   if (loadedLocales.has(locale)) {
     return

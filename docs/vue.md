@@ -30,7 +30,32 @@ formatter.isValidDate({
   input: 'YYYY-MM-DD',
   strict: true
 })
+
+const chain = formatter.createDateChain({
+  date: '23/03/2026',
+  input: 'DD/MM/YYYY'
+})
+
+await chain.ready
+
+chain.add(3, 'month').set('day', 1).format('YYYY-MM-DD')
 ```
+
+The composable exposes:
+
+- `createDateChain(props?)`
+- `getDate(props?)`
+- `parseDate(props)`
+- `isValidDate(props)`
+- `setLocale(locale)`
+- `locale`
+- `currentLocale`
+- `getSupportedLocales()`
+- `ready`
+
+Use `createDateChain(...)` when you need chained manipulation or comparison while staying scoped to the composable's formatter configuration.
+
+If the locale may need to load, wait for both `formatter.ready` and `chain.ready` before calling chain methods.
 
 `formatter.currentLocale` is a computed ref tied to the formatter instance.
 

@@ -53,6 +53,25 @@ describe('react wrapper', () => {
     ).toBe(false)
   })
 
+  it('exposes the chainable api from the hook', async () => {
+    const { result } = renderHook(() => useDateFormatter({ locale: 'en', strict: true }))
+
+    await act(async () => {
+      await result.current.ready
+    })
+
+    const chain = result.current.createDateChain({
+      date: '23/03/2026',
+      input: 'DD/MM/YYYY'
+    })
+
+    await act(async () => {
+      await chain.ready
+    })
+
+    expect(chain.add(3, 'month').set('day', 1).format('YYYY-MM-DD')).toBe('2026-06-01')
+  })
+
   it('resolves the initial locale to a supported base locale', async () => {
     const { result } = renderHook(() => useDateFormatter({ locale: 'en-us' }))
 

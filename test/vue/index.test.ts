@@ -49,6 +49,21 @@ describe('vue wrapper', () => {
     ).toBe(false)
   })
 
+  it('exposes the chainable api from the composable', async () => {
+    const formatter = useDateFormatter({ locale: 'en', strict: true })
+
+    await formatter.ready
+
+    const chain = formatter.createDateChain({
+      date: '23/03/2026',
+      input: 'DD/MM/YYYY'
+    })
+
+    await chain.ready
+
+    expect(chain.add(3, 'month').set('day', 1).format('YYYY-MM-DD')).toBe('2026-06-01')
+  })
+
   it('resolves the configured locale to a supported base locale', async () => {
     const formatter = useDateFormatter({ locale: 'pt-pt' })
 

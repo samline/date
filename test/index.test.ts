@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  createDateChain,
   createDateFormatter,
   getDate,
   getSupportedLocales,
@@ -255,6 +256,72 @@ describe('createDateFormatter', () => {
     ).toBe(false)
   })
 
+  it('creates a chainable date helper from the root api', async () => {
+    const chain = createDateChain({
+      date: '23/03/2026',
+      input: 'DD/MM/YYYY'
+    })
+
+    await chain.ready
+
+    expect(chain.add(3, 'month').format('YYYY-MM-DD')).toBe('2026-06-23')
+    expect(chain.set('day', 1).format('YYYY-MM-DD')).toBe('2026-06-01')
+    expect(chain.toTimestamp()).toBeTypeOf('number')
+    expect(chain.isSame('2026-06-01', 'day')).toBe(true)
+  })
+
+  it('creates a chainable date helper from a formatter instance', async () => {
+    const formatter = createDateFormatter({ locale: 'fr', strict: true })
+
+    await formatter.ready
+
+    const chain = formatter.createDateChain({
+      date: '2026-03-23',
+      input: 'YYYY-MM-DD'
+    })
+
+    await chain.ready
+
+    expect(chain.format('MMMM')).toBe('mars')
+    expect(chain.endOf('month').format('YYYY-MM-DD')).toBe('2026-03-31')
+  })
+
+  it('preserves invalid chain state and exposes it through toState', async () => {
+    const chain = createDateChain({
+      date: '31/02/2026',
+      input: 'DD/MM/YYYY',
+      strict: true,
+      invalid: 'Fecha invalida'
+    })
+
+    await chain.ready
+
+    expect(chain.isValid()).toBe(false)
+    expect(chain.add(1, 'month').format('YYYY-MM-DD')).toBe('Fecha invalida')
+    expect(chain.toISOString()).toBeNull()
+    expect(chain.toTimestamp()).toBeNull()
+
+    const state = chain.toState()
+
+    expect(state.isValid).toBe(false)
+
+    if (!state.isValid) {
+      expect(state.error).toBe('Fecha invalida')
+    }
+  })
+
+  it('waits for locale loading when creating a chain for an unloaded locale', async () => {
+    const chain = createDateChain({
+      date: '2026-03-23',
+      input: 'YYYY-MM-DD',
+      locale: 'es-mx'
+    })
+
+    await chain.ready
+
+    expect(chain.format('MMMM')).toBe('marzo')
+  })
+
   it('supports one-shot helper functions without creating a formatter manually', async () => {
     expect(
       await getDate({
@@ -307,6 +374,18 @@ describe('createDateFormatter', () => {
   it('throws when neither the regional locale nor the base locale is supported', () => {
     expect(() => createDateFormatter({ locale: 'zz-zz' })).toThrow(
       'Unsupported locale: zz-zz. The package tries an exact locale match first and then falls back to the base locale.'
+    )
+  })
+
+  it('throws when using an unloaded locale chain before it is ready', () => {
+    const chain = createDateChain({
+      date: '2026-03-23',
+      input: 'YYYY-MM-DD',
+      locale: 'pt-br'
+    })
+
+    expect(() => chain.format('MMMM')).toThrow(
+      'Date chain is not ready. Await chain.ready before using it with locales that may need to load.'
     )
   })
 })

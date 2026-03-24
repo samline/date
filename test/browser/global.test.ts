@@ -5,6 +5,7 @@ import { DateKit } from '../../src/browser/global.js'
 describe('browser global', () => {
   it('exposes the browser api object', () => {
     expect(DateKit.getSupportedLocales()).toContain('en')
+    expect(typeof DateKit.createDateChain).toBe('function')
     expect(typeof DateKit.createDateFormatter).toBe('function')
     expect(typeof DateKit.getDate).toBe('function')
     expect(typeof DateKit.parseDate).toBe('function')
@@ -45,6 +46,19 @@ describe('browser global', () => {
         strict: true
       })
     ).toBe(false)
+  })
+
+  it('exposes the chainable api in the browser build', async () => {
+    const chain = DateKit.createDateChain({
+      date: '23/03/2026',
+      input: 'DD/MM/YYYY'
+    })
+
+    await chain.ready
+
+    expect(chain.add(3, 'month').format('YYYY-MM-DD')).toBe('2026-06-23')
+    expect(chain.set('day', 1).format('YYYY-MM-DD')).toBe('2026-06-01')
+    expect(chain.toState().isValid).toBe(true)
   })
 
   it('exposes one-shot helpers in the browser build', async () => {

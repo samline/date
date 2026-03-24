@@ -3,7 +3,9 @@ import { useRef, useState } from 'react'
 import {
   createDateFormatter,
   getSupportedLocales,
+  type CreateDateChainOptions,
   type DateFormatterConfig,
+  type DateChain,
   type DateParsingOptions,
   type GetDateOptions,
   type LocaleInput,
@@ -19,6 +21,7 @@ export const useDateFormatter = (options?: UseDateFormatterOptions) => {
   return {
     locale,
     currentLocale: locale,
+    createDateChain: (props?: CreateDateChainOptions): DateChain => formatterRef.current.createDateChain(props),
     getDate: (props?: GetDateOptions) => formatterRef.current.getDate(props),
     parseDate: (props: DateParsingOptions) => formatterRef.current.parseDate(props),
     isValidDate: (props: DateParsingOptions) => formatterRef.current.isValidDate(props),

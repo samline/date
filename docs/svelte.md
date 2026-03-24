@@ -30,7 +30,33 @@ formatter.isValidDate({
   input: 'YYYY-MM-DD',
   strict: true
 })
+
+const chain = formatter.createDateChain({
+  date: '23/03/2026',
+  input: 'DD/MM/YYYY'
+})
+
+await chain.ready
+
+chain.add(3, 'month').set('day', 1).format('YYYY-MM-DD')
 ```
+
+The store API exposes:
+
+- `createDateChain(props?)`
+- `getDate(props?)`
+- `parseDate(props)`
+- `isValidDate(props)`
+- `setLocale(locale)`
+- `locale`
+- `currentLocale()`
+- `getLocale()`
+- `getSupportedLocales()`
+- `ready`
+
+Use `createDateChain(...)` when you need chained manipulation or comparison while keeping locale state scoped to the store instance.
+
+If the locale may need to load, wait for both `formatter.ready` and `chain.ready` before calling chain methods.
 
 The store keeps locale state aligned with the formatter instance and exposes `currentLocale()` and `ready`.
 

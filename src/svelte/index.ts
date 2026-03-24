@@ -3,6 +3,8 @@ import { get, writable } from 'svelte/store'
 import {
   createDateFormatter,
   getSupportedLocales,
+  type CreateDateChainOptions,
+  type DateChain,
   type DateFormatterConfig,
   type DateParsingOptions,
   type GetDateOptions,
@@ -21,6 +23,7 @@ export const createDateFormatterStore = (options?: CreateDateFormatterStoreOptio
       subscribe: locale.subscribe
     },
     currentLocale: () => get(locale),
+    createDateChain: (props?: CreateDateChainOptions): DateChain => formatter.createDateChain(props),
     getDate: (props?: GetDateOptions) => formatter.getDate(props),
     parseDate: (props: DateParsingOptions) => formatter.parseDate(props),
     isValidDate: (props: DateParsingOptions) => formatter.isValidDate(props),

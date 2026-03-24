@@ -5,9 +5,16 @@ Use the browser build when your project loads scripts directly in the page and c
 This is useful in Shopify themes, WordPress templates, and browser-only environments with no bundler.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@samline/date@2.1.2/dist/browser/date.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@samline/date@2.2.0/dist/browser/date.global.js"></script>
 <script>
   ;(async () => {
+    const chain = window.DateKit.createDateChain({
+      date: '23/03/2026',
+      input: 'DD/MM/YYYY'
+    })
+
+    await chain.ready
+
     const quickValue = await window.DateKit.getDate({
       date: '23/03/2026',
       input: 'DD/MM/YYYY',
@@ -41,6 +48,7 @@ This is useful in Shopify themes, WordPress templates, and browser-only environm
 
     console.log(value)
     console.log(quickValue)
+    console.log(chain.add(3, 'month').set('day', 1).format('YYYY-MM-DD'))
     console.log(parsed.isValid)
   })()
 </script>
@@ -52,6 +60,7 @@ Use the browser bundle when your project cannot run a build step. If your projec
 
 The browser global exports:
 
+- `createDateChain`
 - `createDateFormatter`
 - `getDate`
 - `parseDate`
@@ -62,7 +71,9 @@ The browser global exports:
 
 The browser global is `window.DateKit`.
 
-Use `DateKit.getDate`, `DateKit.parseDate`, or `DateKit.isValidDate` for one-shot calls.
+Use `DateKit.getDate`, `DateKit.parseDate`, or `DateKit.isValidDate` for async one-shot calls.
+
+Use `DateKit.createDateChain(...)` for one-shot manipulation or comparison flows. It returns immediately, and you should `await chain.ready` before calling chain methods when the locale may need to load.
 
 Use `createDateFormatter` to create scoped instances. The browser bundle no longer exposes legacy global formatting helpers.
 

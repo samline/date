@@ -1,4 +1,5 @@
 import {
+  createDateChain,
   createDateFormatter,
   getDate,
   getSupportedLocales,
@@ -9,6 +10,7 @@ import {
 } from '../index.js'
 
 export const DateKit = {
+  createDateChain,
   createDateFormatter,
   getDate,
   getSupportedLocales,
