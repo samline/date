@@ -17,5 +17,16 @@ export default defineConfig([
     splitting: false,
     target: 'es2020',
     outDir: 'dist'
+  },
+  {
+    entry: {
+      'browser/date': 'src/browser/cdn.ts'
+    },
+    format: ['iife'],
+    clean: false,
+    sourcemap: true,
+    splitting: false,
+    target: 'es2020',
+    outDir: 'dist'
   }
 ])

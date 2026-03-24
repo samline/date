@@ -13,6 +13,8 @@ export const SUPPORTED_LOCALES = [
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 export type LocaleInput = string
 
+const loadedLocales = new Set<SupportedLocale>(['en'])
+
 const localeLoaders: Record<SupportedLocale, (() => Promise<unknown>) | null> = {
   en: null,
   es: () => import('dayjs/locale/es.js'),
@@ -58,12 +60,22 @@ export const resolveLocale = (locale: LocaleInput): SupportedLocale | null => {
   return asSupportedLocale(baseLocale)
 }
 
+export const markLocaleAsLoaded = (locale: SupportedLocale): void => {
+  loadedLocales.add(locale)
+}
+
 export const ensureLocaleLoaded = async (locale: SupportedLocale): Promise<void> => {
+  if (loadedLocales.has(locale)) {
+    return
+  }
+
   const load = localeLoaders[locale]
 
   if (!load) {
+    loadedLocales.add(locale)
     return
   }
 
   await load()
+  loadedLocales.add(locale)
 }

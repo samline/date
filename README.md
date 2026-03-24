@@ -19,7 +19,7 @@ Day.js repository: https://github.com/iamkun/dayjs
 ## Table of Contents
 
 - [Installation](#installation)
-- [Browser and CDN](#browser-and-cdn)
+- [CDN / Browser](#cdn--browser)
 - [Entrypoints](#entrypoints)
 - [Quick Start](#quick-start)
 - [API](#api)
@@ -47,39 +47,36 @@ yarn add @samline/date
 bun add @samline/date
 ```
 
-## Browser and CDN
+## CDN / Browser
 
-If your project does not use a bundler, load the browser build from a CDN. Prefer pinning a version instead of using `latest` in production.
+Use the browser bundle when your project loads scripts directly in the page and cannot compile npm modules.
+
+This is useful in environments such as Shopify themes, WordPress templates, or plain HTML pages with no build step.
 
 ```html
-<script type="module">
-  import { DateKit } from 'https://cdn.jsdelivr.net/npm/@samline/date@2.1.1/dist/browser/global.js'
+<script src="https://cdn.jsdelivr.net/npm/@samline/date@2.1.2/dist/browser/date.global.js"></script>
+```
 
-  const value = await DateKit.getDate({
-    date: '23/03/2026',
-    input: 'DD/MM/YYYY',
-    output: 'MMMM D, YYYY'
-  })
+Then use it from a normal script:
 
-  console.log(value)
-  console.log(window.DateKit.resolveLocale('en-us'))
+```html
+<script>
+  ;(async () => {
+    const value = await window.DateKit.getDate({
+      date: '23/03/2026',
+      input: 'DD/MM/YYYY',
+      output: 'MMMM D, YYYY'
+    })
+
+    console.log(value)
+    console.log(window.DateKit.resolveLocale('en-us'))
+  })()
 </script>
 ```
 
-You can also use unpkg:
+After the CDN script loads, the browser build exposes `window.DateKit`.
 
-```html
-<script type="module">
-  import { DateKit } from 'https://unpkg.com/@samline/date@2.1.1/dist/browser/global.js'
-
-  console.log(await DateKit.isValidDate({
-    date: '23/03/2026',
-    input: 'DD/MM/YYYY'
-  }))
-</script>
-```
-
-The browser bundle exposes `window.DateKit` and the same shared helpers documented below.
+Use one of the package manager commands above when your project has a build step. If you are working in Shopify, WordPress, or any browser-only template without compilation, use the browser bundle described in [docs/browser.md](docs/browser.md).
 
 ## Entrypoints
 
