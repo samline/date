@@ -1,8 +1,12 @@
-import { createDateFormatter, getSupportedLocales } from '../index.js'
+import { createDateFormatter, getDate, getSupportedLocales, isValidDate, parseDate } from '../index.js'
 
 export const DateKit = {
   createDateFormatter,
+  getDate,
   getSupportedLocales
+  ,
+  parseDate,
+  isValidDate
 }
 
 declare global {

@@ -1,4 +1,4 @@
-export { createDateFormatter, getSupportedLocales } from '../core/date.js'
+export { createDateFormatter, getDate, getSupportedLocales, isValidDate, parseDate } from '../core/date.js'
 export type {
 	DateFormatter,
 	DateFormatterConfig,

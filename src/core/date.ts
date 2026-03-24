@@ -64,6 +64,16 @@ export type ParseDateResult = ParseDateSuccess | ParseDateFailure
 const DEFAULT_FORMAT = 'YYYY-MM-DD'
 const DEFAULT_LOCALE: SupportedLocale = 'en'
 const DEFAULT_INVALID_DATE = 'Invalid Date'
+const DEFAULT_STRICT = true
+
+const createResolvedConfig = (
+  locale: SupportedLocale,
+  config?: DateFormatterConfig
+): Required<DateFormatterConfig> => ({
+  locale,
+  strict: config?.strict ?? DEFAULT_STRICT,
+  invalid: config?.invalid ?? DEFAULT_INVALID_DATE
+})
 
 const getInvalidDateText = (config?: DateFormatterConfig, props?: GetDateOptions): string => {
   return props?.invalid ?? config?.invalid ?? DEFAULT_INVALID_DATE
@@ -71,6 +81,13 @@ const getInvalidDateText = (config?: DateFormatterConfig, props?: GetDateOptions
 
 const getTargetLocale = (currentLocale: SupportedLocale, props?: GetDateOptions): SupportedLocale => {
   return props?.locale ?? currentLocale
+}
+
+const getHelperLocale = <T extends { locale?: SupportedLocale }>(
+  config?: DateFormatterConfig,
+  props?: T
+): SupportedLocale => {
+  return props?.locale ?? config?.locale ?? DEFAULT_LOCALE
 }
 
 const parseDateValue = (
@@ -161,14 +178,43 @@ function assertSupportedLocale(locale: string): asserts locale is SupportedLocal
 
 export const getSupportedLocales = (): readonly SupportedLocale[] => SUPPORTED_LOCALES
 
+export const getDate = async (props?: GetDateOptions, config?: DateFormatterConfig): Promise<string> => {
+  const locale = getHelperLocale(config, props)
+  const formatter = createDateFormatter({ ...config, locale })
+
+  await formatter.ready
+
+  return formatter.getDate(props)
+}
+
+export const parseDate = async (
+  props: DateParsingOptions,
+  config?: DateFormatterConfig
+): Promise<ParseDateResult> => {
+  const locale = getHelperLocale(config, props)
+  const formatter = createDateFormatter({ ...config, locale })
+
+  await formatter.ready
+
+  return formatter.parseDate(props)
+}
+
+export const isValidDate = async (
+  props: DateParsingOptions,
+  config?: DateFormatterConfig
+): Promise<boolean> => {
+  const locale = getHelperLocale(config, props)
+  const formatter = createDateFormatter({ ...config, locale })
+
+  await formatter.ready
+
+  return formatter.isValidDate(props)
+}
+
 export const createDateFormatter = (config?: DateFormatterConfig): DateFormatter => {
   let currentLocale = config?.locale ?? DEFAULT_LOCALE
 
-  const getConfig = (): Required<DateFormatterConfig> => ({
-    locale: currentLocale,
-    strict: config?.strict ?? false,
-    invalid: config?.invalid ?? DEFAULT_INVALID_DATE
-  })
+  const getConfig = (): Required<DateFormatterConfig> => createResolvedConfig(currentLocale, config)
 
   const ready = ensureLocaleLoaded(currentLocale)
   const parseDate = createFormatterParseDate(getConfig)

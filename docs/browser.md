@@ -6,7 +6,13 @@ Use the browser build when you need the package without a bundler.
 <script type="module">
   import { DateKit } from './dist/browser/global.js'
 
-  const formatter = DateKit.createDateFormatter({ locale: 'fr', strict: true })
+  const quickValue = await DateKit.getDate({
+    date: '23/03/2026',
+    input: 'DD/MM/YYYY',
+    output: 'YYYY-MM-DD'
+  })
+
+  const formatter = DateKit.createDateFormatter({ locale: 'fr' })
 
   await formatter.ready
 
@@ -23,6 +29,7 @@ Use the browser build when you need the package without a bundler.
   })
 
   console.log(value)
+  console.log(quickValue)
   console.log(parsed.isValid)
 </script>
 ```
@@ -30,8 +37,13 @@ Use the browser build when you need the package without a bundler.
 The browser global exports:
 
 - `createDateFormatter`
+- `getDate`
+- `parseDate`
+- `isValidDate`
 - `getSupportedLocales`
 
 The browser global is `window.DateKit`.
+
+Use `DateKit.getDate`, `DateKit.parseDate`, or `DateKit.isValidDate` for one-shot calls.
 
 Use `createDateFormatter` to create scoped instances. The browser bundle no longer exposes legacy global formatting helpers.

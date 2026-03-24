@@ -1,5 +1,8 @@
 export {
   createDateFormatter,
+  getDate,
+  isValidDate,
+  parseDate,
   getSupportedLocales,
   type DateFormatter,
   type DateFormatterConfig,

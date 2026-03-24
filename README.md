@@ -36,9 +36,21 @@ npm install @samline/date
 ## Quick Start
 
 ```ts
+import { getDate } from '@samline/date'
+
+const date = await getDate({
+  date: '23/03/2026',
+  input: 'DD/MM/YYYY',
+  output: 'MMMM D, YYYY'
+})
+```
+
+For repeated work with the same locale or invalid text, create one formatter instance and reuse it:
+
+```ts
 import { createDateFormatter } from '@samline/date'
 
-const formatter = createDateFormatter({ locale: 'es-mx', strict: true })
+const formatter = createDateFormatter({ locale: 'es-mx' })
 
 await formatter.ready
 
@@ -71,7 +83,7 @@ createDateFormatter(config?: {
 
 Creates a formatter instance with its own locale state. This avoids coupling framework wrappers and utility calls to the global Day.js locale.
 
-Use `strict: true` to make parsing fail when the input does not match the provided format exactly.
+`strict` is `true` by default, so parsing fails when the input does not match the provided format exactly. Use `strict: false` only when you explicitly want lenient parsing.
 
 If you override `locale` per call, make sure that locale was already loaded by a formatter instance.
 
@@ -84,6 +96,44 @@ The formatter instance exposes:
 - `setLocale(locale)`
 - `getSupportedLocales()`
 - `ready`
+
+### One-shot helpers
+
+```ts
+getDate(props?: GetDateOptions, config?: DateFormatterConfig): Promise<string>
+parseDate(props: DateParsingOptions, config?: DateFormatterConfig): Promise<ParseDateResult>
+isValidDate(props: DateParsingOptions, config?: DateFormatterConfig): Promise<boolean>
+```
+
+Use these helpers when you only need a single operation and do not want to create a formatter instance manually.
+
+| Helper | Returns | Use it when you need |
+| --- | --- | --- |
+| `getDate(...)` | formatted string | a final display value |
+| `parseDate(...)` | structured parse result | validation details, `Date`, `iso`, `timestamp`, or deferred formatting |
+| `isValidDate(...)` | boolean | only a yes or no validation check |
+
+```ts
+import { getDate, isValidDate, parseDate } from '@samline/date'
+
+const value = await getDate({
+  date: '23/03/2026',
+  input: 'DD/MM/YYYY',
+  output: 'YYYY-MM-DD'
+})
+
+const parsed = await parseDate({
+  date: '23/03/2026',
+  input: 'DD/MM/YYYY'
+})
+
+const valid = await isValidDate({
+  date: '1970-00-00',
+  input: 'YYYY-MM-DD'
+})
+```
+
+They load the requested locale automatically and also use `strict: true` by default.
 
 ### parseDate
 

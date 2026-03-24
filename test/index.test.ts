@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createDateFormatter, getSupportedLocales } from '../src/index.js'
+import { createDateFormatter, getDate, getSupportedLocales, isValidDate, parseDate } from '../src/index.js'
 
 describe('createDateFormatter', () => {
   it('returns the current date when called without args', async () => {
@@ -34,6 +34,20 @@ describe('createDateFormatter', () => {
       formatter.getDate({
         date: 'not-a-date',
         input: 'DD/MM/YYYY',
+        output: 'YYYY-MM-DD'
+      })
+    ).toBe('Invalid Date')
+  })
+
+  it('uses strict parsing by default', async () => {
+    const formatter = createDateFormatter()
+
+    await formatter.ready
+
+    expect(
+      formatter.getDate({
+        date: '1970-00-00',
+        input: 'YYYY-MM-DD',
         output: 'YYYY-MM-DD'
       })
     ).toBe('Invalid Date')
@@ -188,5 +202,43 @@ describe('createDateFormatter', () => {
         strict: true
       })
     ).toBe(false)
+  })
+
+  it('supports one-shot helper functions without creating a formatter manually', async () => {
+    expect(
+      await getDate({
+        date: '23/03/2026',
+        input: 'DD/MM/YYYY',
+        output: 'YYYY-MM-DD'
+      })
+    ).toBe('2026-03-23')
+
+    const parsed = await parseDate({
+      date: '23/03/2026',
+      input: 'DD/MM/YYYY'
+    })
+
+    expect(parsed.isValid).toBe(true)
+
+    expect(
+      await isValidDate({
+        date: '1970-00-00',
+        input: 'YYYY-MM-DD'
+      })
+    ).toBe(false)
+  })
+
+  it('loads locales on demand for one-shot helper functions', async () => {
+    expect(
+      await getDate(
+        {
+          date: '2026-03-23',
+          input: 'YYYY-MM-DD',
+          output: 'MMMM',
+          locale: 'fr'
+        },
+        { invalid: 'Invalid Date' }
+      )
+    ).toBe('mars')
   })
 })

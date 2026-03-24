@@ -6,6 +6,9 @@ describe('browser global', () => {
   it('exposes the browser api object', () => {
     expect(DateKit.getSupportedLocales()).toContain('en')
     expect(typeof DateKit.createDateFormatter).toBe('function')
+    expect(typeof DateKit.getDate).toBe('function')
+    expect(typeof DateKit.parseDate).toBe('function')
+    expect(typeof DateKit.isValidDate).toBe('function')
   })
 
   it('exposes formatter creation in the browser build', async () => {
@@ -36,6 +39,32 @@ describe('browser global', () => {
         date: '1970-00-00',
         input: 'YYYY-MM-DD',
         strict: true
+      })
+    ).toBe(false)
+  })
+
+  it('exposes one-shot helpers in the browser build', async () => {
+    expect(
+      await DateKit.getDate({
+        date: '23/03/2026',
+        input: 'DD/MM/YYYY',
+        output: 'YYYY-MM-DD'
+      })
+    ).toBe('2026-03-23')
+
+    expect(
+      (
+        await DateKit.parseDate({
+          date: '23/03/2026',
+          input: 'DD/MM/YYYY'
+        })
+      ).isValid
+    ).toBe(true)
+
+    expect(
+      await DateKit.isValidDate({
+        date: '1970-00-00',
+        input: 'YYYY-MM-DD'
       })
     ).toBe(false)
   })
