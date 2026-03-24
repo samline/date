@@ -5,7 +5,7 @@ Use the browser build when your project loads scripts directly in the page and c
 This is useful in Shopify themes, WordPress templates, and browser-only environments with no bundler.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@samline/date@2.2.0/dist/browser/date.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@samline/date@2.2.1/dist/browser/date.global.js"></script>
 <script>
   ;(async () => {
     const chain = window.DateKit.createDateChain({

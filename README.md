@@ -2,7 +2,7 @@
 
 Small date formatting package built on top of Day.js with strict parsing, locale-aware formatting, and a shared API for core, vanilla, React, Vue, Svelte, and browser usage.
 
-This package uses Day.js as its date engine. Thanks to the Day.js project for making that foundation available.
+This package uses Day.js as its date engine.
 
 Day.js repository: https://github.com/iamkun/dayjs
 
@@ -55,7 +55,7 @@ Use the browser bundle when your project loads scripts directly in the page and 
 This is useful in environments such as Shopify themes, WordPress templates, or plain HTML pages with no build step.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@samline/date@2.2.0/dist/browser/date.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@samline/date@2.2.1/dist/browser/date.global.js"></script>
 ```
 
 Then use it from a normal script:
