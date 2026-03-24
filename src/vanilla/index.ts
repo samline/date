@@ -9,4 +9,4 @@ export type {
 	ParseDateResult,
 	ParseDateSuccess
 } from '../core/date.js'
-export { SUPPORTED_LOCALES, type SupportedLocale } from '../core/locales.js'
+export { SUPPORTED_LOCALES, isSupportedLocale, resolveLocale, type LocaleInput, type SupportedLocale } from '../core/locales.js'

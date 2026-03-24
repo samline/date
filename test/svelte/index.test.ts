@@ -15,7 +15,7 @@ describe('svelte wrapper', () => {
     const formatter = createDateFormatterStore({ locale: 'en' })
 
     await formatter.ready
-    await formatter.setLocale('it')
+    await formatter.setLocale('it-ch')
 
     expect(formatter.getLocale()).toBe('it')
     expect(formatter.currentLocale()).toBe('it')
@@ -47,5 +47,14 @@ describe('svelte wrapper', () => {
         strict: true
       })
     ).toBe(false)
+  })
+
+  it('resolves the initial locale to a supported base locale', async () => {
+    const formatter = createDateFormatterStore({ locale: 'fr-ca' })
+
+    await formatter.ready
+
+    expect(formatter.getLocale()).toBe('fr')
+    expect(formatter.currentLocale()).toBe('fr')
   })
 })

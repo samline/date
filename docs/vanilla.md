@@ -23,6 +23,10 @@ await formatter.ready
 
 await formatter.setLocale('es')
 
+await formatter.setLocale('en-us')
+formatter.getCurrentLocale()
+// en
+
 formatter.getDate({
   date: '2026-03-23',
   input: 'YYYY-MM-DD',
@@ -70,4 +74,6 @@ Each formatter instance keeps its own locale state.
 
 The top-level one-shot helpers load the needed locale automatically and use `strict: true` by default.
 
-Per-call `locale` overrides work after that locale has been loaded by any formatter instance.
+Per-call `locale` overrides work after that effective locale has been loaded by any formatter instance.
+
+Locale resolution tries an exact match first and then falls back to the base locale before the hyphen. For example, `es-mx` stays `es-mx`, while `fr-ca` resolves to `fr`.

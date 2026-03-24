@@ -12,9 +12,18 @@ Use the browser build when you need the package without a bundler.
     output: 'YYYY-MM-DD'
   })
 
-  const formatter = DateKit.createDateFormatter({ locale: 'fr' })
+  const formatter = DateKit.createDateFormatter({ locale: 'fr-ca' })
 
   await formatter.ready
+
+  console.log(formatter.getCurrentLocale())
+  // fr
+
+  console.log(DateKit.resolveLocale('en-us'))
+  // en
+
+  console.log(DateKit.isSupportedLocale('es-ar'))
+  // true
 
   const value = formatter.getDate({
     date: '2026-03-23',
@@ -41,9 +50,13 @@ The browser global exports:
 - `parseDate`
 - `isValidDate`
 - `getSupportedLocales`
+- `resolveLocale`
+- `isSupportedLocale`
 
 The browser global is `window.DateKit`.
 
 Use `DateKit.getDate`, `DateKit.parseDate`, or `DateKit.isValidDate` for one-shot calls.
 
 Use `createDateFormatter` to create scoped instances. The browser bundle no longer exposes legacy global formatting helpers.
+
+Regional locale input resolves to the exact supported locale when available and otherwise falls back to the base locale.

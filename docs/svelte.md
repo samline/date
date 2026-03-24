@@ -5,9 +5,12 @@ Use the Svelte wrapper when you want a store-driven API for locale and formattin
 ```ts
 import { createDateFormatterStore } from '@samline/date/svelte'
 
-const formatter = createDateFormatterStore({ locale: 'en', strict: true })
+const formatter = createDateFormatterStore({ locale: 'fr-ca', strict: true })
 
 await formatter.ready
+
+formatter.currentLocale()
+// fr
 
 await formatter.setLocale('de')
 
@@ -30,3 +33,5 @@ formatter.isValidDate({
 ```
 
 The store keeps locale state aligned with the formatter instance and exposes `currentLocale()` and `ready`.
+
+Regional locale input uses the exact variant when supported and otherwise falls back to the base locale.

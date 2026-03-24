@@ -11,6 +11,7 @@ export const SUPPORTED_LOCALES = [
 ] as const
 
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
+export type LocaleInput = string
 
 const localeLoaders: Record<SupportedLocale, (() => Promise<unknown>) | null> = {
   en: null,
@@ -24,8 +25,37 @@ const localeLoaders: Record<SupportedLocale, (() => Promise<unknown>) | null> = 
   ja: () => import('dayjs/locale/ja.js')
 }
 
-export const isSupportedLocale = (locale: string): locale is SupportedLocale => {
-  return SUPPORTED_LOCALES.includes(locale as SupportedLocale)
+const normalizeLocale = (locale: string): string => {
+  return locale.trim().toLowerCase().replace(/_/g, '-')
+}
+
+const asSupportedLocale = (locale: string): SupportedLocale | null => {
+  if (!SUPPORTED_LOCALES.includes(locale as SupportedLocale)) {
+    return null
+  }
+
+  return locale as SupportedLocale
+}
+
+export const isSupportedLocale = (locale: string): boolean => {
+  return resolveLocale(locale) !== null
+}
+
+export const resolveLocale = (locale: LocaleInput): SupportedLocale | null => {
+  const normalizedLocale = normalizeLocale(locale)
+  const exactLocale = asSupportedLocale(normalizedLocale)
+
+  if (exactLocale) {
+    return exactLocale
+  }
+
+  const [baseLocale] = normalizedLocale.split('-')
+
+  if (!baseLocale) {
+    return null
+  }
+
+  return asSupportedLocale(baseLocale)
 }
 
 export const ensureLocaleLoaded = async (locale: SupportedLocale): Promise<void> => {

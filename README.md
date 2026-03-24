@@ -45,6 +45,21 @@ const date = await getDate({
 })
 ```
 
+You can also inspect the effective locale before formatting:
+
+```ts
+import { resolveLocale } from '@samline/date'
+
+resolveLocale('es-mx')
+// es-mx
+
+resolveLocale('en-us')
+// en
+
+resolveLocale('zz-zz')
+// null
+```
+
 For repeated work with the same locale or invalid text, create one formatter instance and reuse it:
 
 ```ts
@@ -67,7 +82,7 @@ const date = formatter.getDate({
 
 ```ts
 createDateFormatter(config?: {
-  locale?: SupportedLocale
+  locale?: LocaleInput
   strict?: boolean
   invalid?: string
 }): {
@@ -76,7 +91,7 @@ createDateFormatter(config?: {
   isValidDate(props: DateParsingOptions): boolean
   getSupportedLocales(): readonly SupportedLocale[]
   getCurrentLocale(): SupportedLocale
-  setLocale(locale: SupportedLocale): Promise<void>
+  setLocale(locale: LocaleInput): Promise<void>
   ready: Promise<void>
 }
 ```
@@ -85,7 +100,9 @@ Creates a formatter instance with its own locale state. This avoids coupling fra
 
 `strict` is `true` by default, so parsing fails when the input does not match the provided format exactly. Use `strict: false` only when you explicitly want lenient parsing.
 
-If you override `locale` per call, make sure that locale was already loaded by a formatter instance.
+If you override `locale` per call, make sure the effective locale was already loaded by a formatter instance.
+
+Regional locale input falls back to the base locale when the exact variant is not supported by the package. For example, `en-us` resolves to `en`, while `es-mx` stays as `es-mx` because that locale is supported explicitly.
 
 The formatter instance exposes:
 
@@ -96,6 +113,19 @@ The formatter instance exposes:
 - `setLocale(locale)`
 - `getSupportedLocales()`
 - `ready`
+
+### Locale helpers
+
+```ts
+resolveLocale(locale: LocaleInput): SupportedLocale | null
+isSupportedLocale(locale: string): boolean
+```
+
+Use `resolveLocale` when you want to know the effective locale before creating a formatter or calling a helper.
+
+Use `isSupportedLocale` when you only need a boolean check after the package applies its exact-match and base-locale fallback rules.
+
+These helpers are also available in the browser build through `DateKit.resolveLocale(...)` and `DateKit.isSupportedLocale(...)`.
 
 ### One-shot helpers
 
@@ -176,7 +206,23 @@ The package ships helper support for these locale keys:
 - `it`
 - `ja`
 
-Use `createDateFormatter({ locale: 'es-mx' })` when you need a locale other than English.
+You can also pass regional locale input such as `en-us`, `fr-ca`, or `pt-pt`.
+
+The resolution rule is:
+
+- if the exact locale exists, use it
+- otherwise, try the base locale before the hyphen
+- if neither exists, throw an unsupported locale error
+
+Examples:
+
+- `es-mx` -> `es-mx`
+- `es-ar` -> `es`
+- `en-us` -> `en`
+- `pt-pt` -> `pt`
+- `zz-zz` -> error
+
+Use a simple locale like `fr` or `en` when the base language is enough. Use a regional locale like `es-mx` or `pt-br` when you need a supported country-specific variant.
 
 ## Documentation
 

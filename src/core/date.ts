@@ -2,7 +2,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat.js'
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
 
-import { ensureLocaleLoaded, isSupportedLocale, SUPPORTED_LOCALES, type SupportedLocale } from './locales.js'
+import { ensureLocaleLoaded, resolveLocale, SUPPORTED_LOCALES, type LocaleInput, type SupportedLocale } from './locales.js'
 
 dayjs.extend(customParseFormat)
 dayjs.locale('en')
@@ -11,7 +11,7 @@ export type DateValue = string | number | Date
 
 type DateInputOptions = {
   input?: string | readonly string[]
-  locale?: SupportedLocale
+  locale?: LocaleInput
   strict?: boolean
 }
 
@@ -26,9 +26,15 @@ export type GetDateOptions = DateInputOptions & {
 }
 
 export type DateFormatterConfig = {
-  locale?: SupportedLocale
+  locale?: LocaleInput
   strict?: boolean
   invalid?: string
+}
+
+type ResolvedDateFormatterConfig = {
+  locale: SupportedLocale
+  strict: boolean
+  invalid: string
 }
 
 export type DateFormatter = {
@@ -37,7 +43,7 @@ export type DateFormatter = {
   isValidDate: (props: DateParsingOptions) => boolean
   getSupportedLocales: () => readonly SupportedLocale[]
   getCurrentLocale: () => SupportedLocale
-  setLocale: (locale: SupportedLocale) => Promise<void>
+  setLocale: (locale: LocaleInput) => Promise<void>
   ready: Promise<void>
 }
 
@@ -69,7 +75,7 @@ const DEFAULT_STRICT = true
 const createResolvedConfig = (
   locale: SupportedLocale,
   config?: DateFormatterConfig
-): Required<DateFormatterConfig> => ({
+): ResolvedDateFormatterConfig => ({
   locale,
   strict: config?.strict ?? DEFAULT_STRICT,
   invalid: config?.invalid ?? DEFAULT_INVALID_DATE
@@ -80,14 +86,26 @@ const getInvalidDateText = (config?: DateFormatterConfig, props?: GetDateOptions
 }
 
 const getTargetLocale = (currentLocale: SupportedLocale, props?: GetDateOptions): SupportedLocale => {
-  return props?.locale ?? currentLocale
+  if (!props?.locale) {
+    return currentLocale
+  }
+
+  return resolveLocaleOrThrow(props.locale)
 }
 
-const getHelperLocale = <T extends { locale?: SupportedLocale }>(
+const getHelperLocale = <T extends { locale?: LocaleInput }>(
   config?: DateFormatterConfig,
   props?: T
 ): SupportedLocale => {
-  return props?.locale ?? config?.locale ?? DEFAULT_LOCALE
+  if (props?.locale) {
+    return resolveLocaleOrThrow(props.locale)
+  }
+
+  if (config?.locale) {
+    return resolveLocaleOrThrow(config.locale)
+  }
+
+  return DEFAULT_LOCALE
 }
 
 const parseDateValue = (
@@ -107,7 +125,7 @@ const parseDateValue = (
   return dayjs(value, [...input], locale, strict).locale(locale)
 }
 
-const createFormatterParseDate = (getConfig: () => Required<DateFormatterConfig>) => {
+const createFormatterParseDate = (getConfig: () => ResolvedDateFormatterConfig) => {
   return (props: DateParsingOptions): ParseDateResult => {
     const config = getConfig()
     const locale = getTargetLocale(config.locale, props)
@@ -139,7 +157,7 @@ const createFormatterIsValidDate = (parseDate: (props: DateParsingOptions) => Pa
   return (props: DateParsingOptions): boolean => parseDate(props).isValid
 }
 
-const createFormatterGetDate = (getConfig: () => Required<DateFormatterConfig>) => {
+const createFormatterGetDate = (getConfig: () => ResolvedDateFormatterConfig) => {
   const parseDate = createFormatterParseDate(getConfig)
 
   return (props?: GetDateOptions): string => {
@@ -170,10 +188,16 @@ const createFormatterGetDate = (getConfig: () => Required<DateFormatterConfig>) 
   }
 }
 
-function assertSupportedLocale(locale: string): asserts locale is SupportedLocale {
-  if (!isSupportedLocale(locale)) {
-    throw new Error(`Unsupported locale: ${locale}`)
+function resolveLocaleOrThrow(locale: LocaleInput): SupportedLocale {
+  const resolvedLocale = resolveLocale(locale)
+
+  if (!resolvedLocale) {
+    throw new Error(
+      `Unsupported locale: ${locale}. The package tries an exact locale match first and then falls back to the base locale.`
+    )
   }
+
+  return resolvedLocale
 }
 
 export const getSupportedLocales = (): readonly SupportedLocale[] => SUPPORTED_LOCALES
@@ -212,9 +236,9 @@ export const isValidDate = async (
 }
 
 export const createDateFormatter = (config?: DateFormatterConfig): DateFormatter => {
-  let currentLocale = config?.locale ?? DEFAULT_LOCALE
+  let currentLocale = config?.locale ? resolveLocaleOrThrow(config.locale) : DEFAULT_LOCALE
 
-  const getConfig = (): Required<DateFormatterConfig> => createResolvedConfig(currentLocale, config)
+  const getConfig = (): ResolvedDateFormatterConfig => createResolvedConfig(currentLocale, config)
 
   const ready = ensureLocaleLoaded(currentLocale)
   const parseDate = createFormatterParseDate(getConfig)
@@ -225,10 +249,11 @@ export const createDateFormatter = (config?: DateFormatterConfig): DateFormatter
     isValidDate: createFormatterIsValidDate(parseDate),
     getSupportedLocales,
     getCurrentLocale: () => currentLocale,
-    setLocale: async (locale: SupportedLocale) => {
-      assertSupportedLocale(locale)
-      await ensureLocaleLoaded(locale)
-      currentLocale = locale
+    setLocale: async (locale: LocaleInput) => {
+      const resolvedLocale = resolveLocaleOrThrow(locale)
+
+      await ensureLocaleLoaded(resolvedLocale)
+      currentLocale = resolvedLocale
     },
     ready
   }

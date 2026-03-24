@@ -15,7 +15,7 @@ describe('vue wrapper', () => {
     const formatter = useDateFormatter({ locale: 'en' })
 
     await formatter.ready
-    await formatter.setLocale('de')
+    await formatter.setLocale('de-at')
 
     expect(formatter.locale.value).toBe('de')
     expect(formatter.currentLocale.value).toBe('de')
@@ -47,5 +47,14 @@ describe('vue wrapper', () => {
         strict: true
       })
     ).toBe(false)
+  })
+
+  it('resolves the configured locale to a supported base locale', async () => {
+    const formatter = useDateFormatter({ locale: 'pt-pt' })
+
+    await formatter.ready
+
+    expect(formatter.locale.value).toBe('pt')
+    expect(formatter.currentLocale.value).toBe('pt')
   })
 })

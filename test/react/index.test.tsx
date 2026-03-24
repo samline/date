@@ -17,7 +17,7 @@ describe('react wrapper', () => {
 
     await act(async () => {
       await result.current.ready
-      await result.current.setLocale('fr')
+      await result.current.setLocale('fr-ca')
     })
 
     expect(result.current.locale).toBe('fr')
@@ -51,5 +51,16 @@ describe('react wrapper', () => {
         strict: true
       })
     ).toBe(false)
+  })
+
+  it('resolves the initial locale to a supported base locale', async () => {
+    const { result } = renderHook(() => useDateFormatter({ locale: 'en-us' }))
+
+    await act(async () => {
+      await result.current.ready
+    })
+
+    expect(result.current.locale).toBe('en')
+    expect(result.current.currentLocale).toBe('en')
   })
 })

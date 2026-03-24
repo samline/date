@@ -7,7 +7,7 @@ import { useDateFormatter } from '@samline/date/react'
 
 export function Example() {
   const { locale, currentLocale, setLocale, getDate, parseDate, isValidDate } = useDateFormatter({
-    locale: 'en',
+    locale: 'en-us',
     strict: true
   })
 
@@ -26,3 +26,5 @@ export function Example() {
 ```
 
 The hook now uses an internal formatter instance, so locale changes stay scoped to the hook instead of mutating the shared global locale.
+
+Regional locale input falls back to the supported base locale when the exact variant is not available. For example, `en-us` resolves to `en`, while `es-mx` stays `es-mx`.

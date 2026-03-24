@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { createDateFormatter, getDate, getSupportedLocales, isValidDate, parseDate } from '../src/index.js'
+import {
+  createDateFormatter,
+  getDate,
+  getSupportedLocales,
+  isSupportedLocale,
+  isValidDate,
+  parseDate,
+  resolveLocale
+} from '../src/index.js'
 
 describe('createDateFormatter', () => {
   it('returns the current date when called without args', async () => {
@@ -67,9 +75,34 @@ describe('createDateFormatter', () => {
     ).toBe('marzo')
   })
 
+  it('falls back from a regional locale to its supported base locale', async () => {
+    const formatter = createDateFormatter({ locale: 'en-us' })
+
+    await formatter.ready
+
+    expect(formatter.getCurrentLocale()).toBe('en')
+    expect(
+      formatter.getDate({
+        date: '2026-03-23',
+        input: 'YYYY-MM-DD',
+        output: 'MMMM'
+      })
+    ).toBe('March')
+  })
+
   it('exposes supported locales', () => {
     expect(getSupportedLocales()).toContain('en')
     expect(getSupportedLocales()).toContain('es-mx')
+  })
+
+  it('exposes locale resolution helpers', () => {
+    expect(resolveLocale('es-mx')).toBe('es-mx')
+    expect(resolveLocale('en-us')).toBe('en')
+    expect(resolveLocale('es_AR')).toBe('es')
+    expect(resolveLocale('zz-zz')).toBeNull()
+    expect(isSupportedLocale('fr')).toBe(true)
+    expect(isSupportedLocale('fr-ca')).toBe(true)
+    expect(isSupportedLocale('zz-zz')).toBe(false)
   })
 
   it('supports strict parsing through formatter config', async () => {
@@ -141,6 +174,24 @@ describe('createDateFormatter', () => {
     ).toBe('marzo')
 
     expect(formatter.getCurrentLocale()).toBe('fr')
+  })
+
+  it('resolves per-call regional locales to a supported base locale', async () => {
+    const formatter = createDateFormatter({ locale: 'en' })
+    const frenchFormatter = createDateFormatter({ locale: 'fr' })
+
+    await Promise.all([formatter.ready, frenchFormatter.ready])
+
+    expect(
+      formatter.getDate({
+        date: '2026-03-23',
+        input: 'YYYY-MM-DD',
+        output: 'MMMM',
+        locale: 'fr-ca'
+      })
+    ).toBe('mars')
+
+    expect(formatter.getCurrentLocale()).toBe('en')
   })
 
   it('returns a structured parse result for valid dates', async () => {
@@ -240,5 +291,22 @@ describe('createDateFormatter', () => {
         { invalid: 'Invalid Date' }
       )
     ).toBe('mars')
+  })
+
+  it('falls back to the base locale for one-shot helper functions', async () => {
+    expect(
+      await getDate({
+        date: '2026-03-23',
+        input: 'YYYY-MM-DD',
+        output: 'MMMM',
+        locale: 'pt-pt'
+      })
+    ).toBe('março')
+  })
+
+  it('throws when neither the regional locale nor the base locale is supported', () => {
+    expect(() => createDateFormatter({ locale: 'zz-zz' })).toThrow(
+      'Unsupported locale: zz-zz. The package tries an exact locale match first and then falls back to the base locale.'
+    )
   })
 })

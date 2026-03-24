@@ -6,6 +6,7 @@ import {
   type DateFormatterConfig,
   type DateParsingOptions,
   type GetDateOptions,
+  type LocaleInput,
   type SupportedLocale
 } from '../index.js'
 
@@ -25,9 +26,9 @@ export const createDateFormatterStore = (options?: CreateDateFormatterStoreOptio
     isValidDate: (props: DateParsingOptions) => formatter.isValidDate(props),
     getSupportedLocales,
     ready: formatter.ready,
-    setLocale: async (nextLocale: SupportedLocale) => {
+    setLocale: async (nextLocale: LocaleInput) => {
       await formatter.setLocale(nextLocale)
-      locale.set(nextLocale)
+      locale.set(formatter.getCurrentLocale())
     },
     getLocale: () => get(locale)
   }
